@@ -1,4 +1,5 @@
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.functions.{desc, desc_nulls_first}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
 object DemoRDD extends App {

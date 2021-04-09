@@ -1,29 +1,36 @@
-import org.apache.spark.sql.functions.{broadcast, col}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import DemoDataSet.spark
+import org.apache.spark.sql.functions.{broadcast, col, count, desc_nulls_first, max, mean, min, round}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode, SparkSession}
+
+import java.util.Properties
 
 object DemoDataFrame extends App {
-  val spark = SparkSession
+  import ReadWriteUtils._
+
+  implicit val spark = SparkSession
     .builder()
     .appName("Introduction to RDDs")
     .config("spark.master", "local")
     .getOrCreate()
 
-  val taxiFactsDF: DataFrame = spark.read
-    .load("src/main/resources/yellow_taxi_jan_25_2018")
+  def processTaxiData(taxiFactsDF: DataFrame, taxiZoneDF: DataFrame): DataFrame =
+    taxiFactsDF
+      .join(broadcast(taxiZoneDF), col("DOLocationID") === col("LocationID"), "left")
+      .groupBy(col("Borough"))
+      .agg(
+        count("*").as("total trips"),
+        round(min("trip_distance"), 2).as("min distance"),
+        round(mean("trip_distance"), 2).as("mean distance"),
+        round(max("trip_distance"), 2).as("max distance")
+      )
+      .orderBy(col("total trips").desc)
 
-//  taxiFactsDF.printSchema()
 
-  val taxiZoneDF: DataFrame = spark.read
-    .option("header", "true")
-    .option("inferSchema", "true")
-    .csv("src/main/resources/taxi_zones.csv")
+  val taxiFactsDF: DataFrame = readParquet("src/main/resources/yellow_taxi_jan_25_2018")
+  val taxiZoneDF: DataFrame = readCSV("src/main/resources/taxi_zones.csv")
 
-//  taxiZoneDF.printSchema()
+  val result: DataFrame = processTaxiData(taxiFactsDF, taxiZoneDF)
 
-  taxiFactsDF
-    .join(broadcast(taxiZoneDF), col("DOLocationID") === col("LocationID"), "left")
-    .groupBy(col("Borough"))
-    .count()
-    .orderBy(col("count").desc)
-    .show()
+  result.show()
+
 }
