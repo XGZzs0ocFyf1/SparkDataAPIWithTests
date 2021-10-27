@@ -6,7 +6,7 @@ object DemoDataSet extends App {
   val spark = SparkSession
     .builder()
     .appName("Introduction to RDDs")
-    .config("spark.master", "local")
+    .config("spark.master", "local[2]")
     .getOrCreate()
 
   import model._

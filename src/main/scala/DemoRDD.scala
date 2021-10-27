@@ -14,10 +14,14 @@ object DemoRDD extends App {
   import spark.implicits._
   import model._
 
-  val taxiZoneRDD: RDD[TaxiZone] = context
+  val taxiZoneRDD: RDD[String] = context
     .textFile("src/main/resources/taxi_zones.csv")
+
+  val header: String = taxiZoneRDD.first()
+
+  val filteredTaxiZoneRDD = taxiZoneRDD
+    .filter(r => r != header)
     .map(l => l.split(","))
-    .filter(t => t(3).toUpperCase() == t(3))
     .map(t => TaxiZone(t(0).toInt, t(1), t(2), t(3)))
 
   val taxiFactsDF: DataFrame =
@@ -32,7 +36,7 @@ object DemoRDD extends App {
     taxiFactsDS.rdd
 
 
-  val mappedTaxiZoneRDD: RDD[(Int, String)] = taxiZoneRDD
+  val mappedTaxiZoneRDD: RDD[(Int, String)] = filteredTaxiZoneRDD
     .map(z => (z.LocationID, z.Borough))
 
   val mappedTaxiFactRDD: RDD[(Int, Int)] =
