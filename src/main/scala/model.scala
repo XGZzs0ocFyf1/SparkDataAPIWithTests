@@ -1,3 +1,5 @@
+import java.time.LocalTime
+
 object model {
 
   case class TaxiZone(
@@ -6,6 +8,7 @@ object model {
       Zone: String,
       service_zone: String
   )
+
 
   case class TaxiRide(
       VendorID: Int,
@@ -26,4 +29,6 @@ object model {
       improvement_surcharge: Double,
       total_amount: Double
   )
+
+  case class TimeCount(orderTime: LocalTime, count: Int)
 }
